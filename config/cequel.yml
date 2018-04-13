@@ -1,0 +1,36 @@
+development:
+  host: '127.0.0.1'
+  port: 9042
+  keyspace: imageresizer_development
+  max_retries: 3
+  retry_delay: 0.5
+  newrelic: false
+
+test:
+  host: '127.0.0.1'
+  port: 9042
+  keyspace: imageresizer_test
+  max_retries: 3
+  retry_delay: 0.5
+  newrelic: false
+
+production:
+  hosts:
+    - 'cass1.imageresizer.biz'
+    - 'cass2.imageresizer.biz'
+    - 'cass3.imageresizer.biz'
+  port: 9042
+  keyspace: imageresizer_production
+  username: imageresizer
+  password: <%= ENV['IMAGERESIZER_CASSANDRA_DATABASE_PASSWORD'] %>
+  max_retries: 3
+  retry_delay: 0.5
+  newrelic: true
+  replication:
+    class: SimpleStrategy
+    replication_factor: 1
+# replication:
+#   class: NetworkTopologyStrategy
+#   datacenter1: 3
+#   datacenter2: 2
+# durable_writes: false
