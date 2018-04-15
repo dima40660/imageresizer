@@ -3,9 +3,8 @@ Rails.application.routes.draw do
 
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
-      resources :images do
-        post 'resize', to: 'images#resise'
-      end
+      resources :images, except: [:update]
+      post 'resize', to: 'images#resize'
     end
   end
 end

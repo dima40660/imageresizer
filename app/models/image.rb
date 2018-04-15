@@ -3,14 +3,19 @@ class Image
   include Cequel::Record
 
   belongs_to :user
-  key :id, :uuid
+  key :id, :uuid, auto: true
   column :name, :text
   column :file, :blob
-  column :meta_info, :text
   has_many :images
 
   def resize(height, width)
-    image = MiniMagick::Image.open(file)
-    image.resize(height + "x" + width)
+    image = MiniMagick::Image.read(file)
+    image.resize(height.to_s + "x" + width.to_s)
+  end
+
+  def self.generate_name(original_name,  new_width, new_height)
+    regex = /\.[^\.]\w*\z/
+    splited = original_name.split(regex)
+    splited.first + "_" + new_width.to_s + "x" + new_height.to_s + regex.match(original_name).to_s
   end
 end

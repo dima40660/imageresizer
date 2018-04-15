@@ -18,18 +18,31 @@ class Api::V1::ImagesController < BaseController
   end
 
   def destroy
-    image = Image.find_by(id: params[:id])
+    image = @current_user.images.find_by_id(id: params[:id])
     image.delete
     render json: {}
   end
 
   def resize
-    image = Image.find_by(id: params[:image_id])
-    resized = image.resize(params[:height], params[:width])
-    image.images.create(resized)
+    image = @current_user.images.find_by_id(params[:image_id])
+    if image
+      resized = image.resize(params[:height], params[:width])
+      new_image = @current_user.images.create(id: SecureRandom.uuid,
+                          file: resized.to_blob,
+                          name: Image.generate_name(image.name, params[:width].to_s, params[:height].to_s))
+      render json: {image_url: api_v1_image_path(new_image.id)}
+    else
+      render json:{}, status: :no_content
+    end
   end
 
-  def get_user_images
-
+  def index
+    render json: { images: [@current_user.images.map{|image| {file_name: image.name,
+                                                              image_id: image.id.to_s,
+                                                              image_url: api_v1_image_path(image.id)
+          }
+        }
+      ]
+    }
   end
 end

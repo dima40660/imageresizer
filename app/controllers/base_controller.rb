@@ -11,7 +11,7 @@ class BaseController < ApplicationController
 
   private
   def authorize
-    if !@user_id || !User.find_by_id(@user_id)
+    if !@current_user_id || !User.find_by_id(@current_user_id)
       @current_user = User.create(id: SecureRandom.uuid)
       @current_user_id = @current_user.id
     end
