@@ -1,10 +1,16 @@
+require "mini_magick"
 class Image
   include Cequel::Record
 
-  belongs_to :image
-  key :id, :uuid, auto: true
+  belongs_to :user
+  key :id, :uuid
   column :name, :text
-  column :base64, :text
+  column :file, :blob
   column :meta_info, :text
-  has_many :image
+  has_many :images
+
+  def resize(height, width)
+    image = MiniMagick::Image.open(file)
+    image.resize(height + "x" + width)
+  end
 end

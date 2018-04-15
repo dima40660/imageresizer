@@ -2,14 +2,19 @@ class Api::V1::ImagesController < BaseController
   include ImagesHelper
 
   def create
-    data = parse_image(params[:image])
-    image = Image.create(base64: data)
-    render json: {id: image.id}
+    image = current_user.images.create(id: SecureRandom.uuid,
+                                       name: params[:image].original_filename,
+                                       file: params[:image].read)
+    render json: {image_url: api_v1_image_path(image.id)}
   end
 
   def show
-    image = Image[params[:id]]
-    render json: {image: image.base64}
+    image = @current_user.images.find_by_id(params[:id])
+    if image
+      send_data(image.file)
+    else
+      render json:{}, status: :no_content
+    end
   end
 
   def destroy
@@ -18,4 +23,13 @@ class Api::V1::ImagesController < BaseController
     render json: {}
   end
 
+  def resize
+    image = Image.find_by(id: params[:image_id])
+    resized = image.resize(params[:height], params[:width])
+    image.images.create(resized)
+  end
+
+  def get_user_images
+
+  end
 end

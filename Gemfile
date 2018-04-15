@@ -8,8 +8,6 @@ end
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 5.1.4'
-# Use postgresql as the database for Active Record
-gem 'pg', '~> 0.18'
 # Use Puma as the app server
 gem 'puma', '~> 3.7'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
@@ -29,6 +27,12 @@ gem 'puma', '~> 3.7'
 gem 'activemodel-serializers-xml', '1.0.2'
 gem 'cequel', '3.0.2'
 
+# gem for image resizing
+gem 'mini_magick', '4.8.0'
+
+# api documentation
+gem 'apipie-rails', '0.5.7'
+
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
@@ -39,6 +43,10 @@ group :development do
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
   gem 'spring-watcher-listen', '~> 2.0.0'
+end
+
+group :test do
+  gem 'rspec', '3.7.0'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
