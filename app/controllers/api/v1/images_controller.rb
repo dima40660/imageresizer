@@ -1,8 +1,7 @@
 class Api::V1::ImagesController < BaseController
-  include ImagesHelper
 
   def create
-    image = current_user.images.create(id: SecureRandom.uuid,
+    image = @current_user.images.create(id: SecureRandom.uuid,
                                        name: params[:image].original_filename,
                                        file: params[:image].read)
     render json: {image_url: api_v1_image_path(image.id)}
