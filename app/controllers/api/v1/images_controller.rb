@@ -1,5 +1,7 @@
 class Api::V1::ImagesController < BaseController
 
+  include ImagesDoc
+
   def index
     render json: { images: @current_user.images.map{|image| {file_name: image.name,
                                                               image_id: image.id.to_s,
