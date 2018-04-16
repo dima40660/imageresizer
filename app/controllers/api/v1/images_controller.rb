@@ -1,10 +1,20 @@
 class Api::V1::ImagesController < BaseController
 
+  def index
+    render json: { images: @current_user.images.map{|image| {file_name: image.name,
+                                                              image_id: image.id.to_s,
+                                                              image_url: api_v1_image_path(image.id)}}}
+  end
+
   def create
-    image = @current_user.images.create(id: SecureRandom.uuid,
-                                       name: params[:image].original_filename,
-                                       file: params[:image].read)
-    render json: {image_url: api_v1_image_path(image.id)}
+    if create_image_params
+      image = @current_user.images.create(name: create_image_params.original_filename,
+                                          file: create_image_params.read)
+      render json: {image_url: api_v1_image_path(image.id)}
+    else
+      render json: {}, status: :bad_request
+    end
+
   end
 
   def show
@@ -17,31 +27,40 @@ class Api::V1::ImagesController < BaseController
   end
 
   def destroy
-    image = @current_user.images.find_by_id(id: params[:id])
-    image.delete
-    render json: {}
+    image = @current_user.images.find_by_id(params[:id])
+    if image
+      image.destroy
+    else
+      render json: {}, status: :no_content
+    end
+
   end
 
   def resize
-    image = @current_user.images.find_by_id(params[:image_id])
-    if image
-      resized = image.resize(params[:height], params[:width])
-      new_image = @current_user.images.create(id: SecureRandom.uuid,
-                          file: resized.to_blob,
-                          name: Image.generate_name(image.name, params[:width].to_s, params[:height].to_s))
-      render json: {image_url: api_v1_image_path(new_image.id)}
+    if resize_image_params
+      image = @current_user.images.find_by_id(resize_image_params[:id])
+      if image
+        resized = image.create_resized(resize_image_params)
+        render json: {image_url: api_v1_image_path(resized.id)}
+      else
+        render json:{}, status: :no_content
+      end
     else
-      render json:{}, status: :no_content
+      render json:{}, status: :bad_request
     end
   end
 
-  def index
-    render json: { images: [@current_user.images.map{|image| {file_name: image.name,
-                                                              image_id: image.id.to_s,
-                                                              image_url: api_v1_image_path(image.id)
-          }
-        }
-      ]
-    }
+  private
+
+  def create_image_params
+    if params.has_key?(:image)
+      params.require(:image)
+    end
+  end
+
+  def resize_image_params
+    if params.has_key?(:image)
+      params.require(:image).permit(:id, :width, :height)
+    end
   end
 end

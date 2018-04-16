@@ -8,14 +8,23 @@ class Image
   column :file, :blob
   has_many :images
 
-  def resize(height, width)
-    image = MiniMagick::Image.read(file)
-    image.resize(height.to_s + "x" + width.to_s)
+  def create_resized(resize_image_params)
+    resized = resize(resize_image_params)
+    Image.create(user_id: user_id,
+                 file: resized.to_blob,
+                 name: generate_name(resize_image_params))
   end
 
-  def self.generate_name(original_name,  new_width, new_height)
+  private
+
+  def resize(params)
+    image = MiniMagick::Image.read(file)
+    image.resize("#{params[:width].to_s}x#{params[:height].to_s}")
+  end
+
+  def generate_name(params)
     regex = /\.[^\.]\w*\z/
-    splited = original_name.split(regex)
-    splited.first + "_" + new_width.to_s + "x" + new_height.to_s + regex.match(original_name).to_s
+    splited = name.split(regex)
+    "#{splited.first}_#{params[:width].to_s}x#{params[:height].to_s}#{regex.match(name).to_s}"
   end
 end
