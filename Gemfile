@@ -41,6 +41,7 @@ group :development, :test do
   gem 'rspec-rails', '3.5'
   gem 'rspec-mocks', '3.5'
   gem 'factory_bot', '4.8.2'
+  gem 'simplecov', '0.15.1', require: false
 end
 
 group :development do
