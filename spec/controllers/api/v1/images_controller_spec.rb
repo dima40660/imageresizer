@@ -6,8 +6,10 @@ describe Api::V1::ImagesController, type: :controller do
     @file = fixture_file_upload("#{Rails.root}/spec/resources/min.jpg", 'image/jpg')
     @second_file = fixture_file_upload("#{Rails.root}/spec/resources/s7.jpg", 'image/jpg')
     @user = User.create
+    @file_content = @file.read
     @user_image = @user.images.create(name: @file.original_filename,
-                                      file: @file.read)
+                                      file: @file_content,
+                                      meta_info: Image.get_meta_info(@file_content))
   end
 
   describe "show image list" do
@@ -16,25 +18,34 @@ describe Api::V1::ImagesController, type: :controller do
       request.headers.merge! headers
       get :index
       expect(response).to have_http_status(:success)
-      expect(response.body).to eq({images: [{file_name: "min.jpg", image_id: @user_image.id.to_s, image_url: api_v1_image_path(@user_image.id)}]}.to_json)
+      expect(response.body).to eq({images: [{file_name: "min.jpg",
+                                             image_id: @user_image.id.to_s,
+                                             image_url: api_v1_image_path(@user_image.id),
+                                             meta_info: JSON.parse(@user_image.meta_info)
+                                            }]}.to_json)
     end
 
     it "should not return images from other users" do
       @second_user = User.create
+      file = @second_file.read
       @second_user_image = @second_user.images.create(name: @second_file.original_filename,
-                                                      file: @second_file.read)
+                                                      file: file,
+                                                      meta_info: Image.get_meta_info(file))
 
       headers = {"user-id" => @user.id.to_s}
       request.headers.merge! headers
       get :index
       expect(response).to have_http_status(:success)
-      expect(response.body).to eq({images: [{file_name: "min.jpg", image_id: @user_image.id.to_s, image_url: api_v1_image_path(@user_image.id)}]}.to_json)
+      expect(response.body).to eq({images: [{file_name: "min.jpg",
+                                             image_id: @user_image.id.to_s,
+                                             image_url: api_v1_image_path(@user_image.id),
+                                             meta_info: JSON.parse(@user_image.meta_info)}]}.to_json)
     end
   end
 
   describe "create image" do
     it "should return success on creating image" do
-      post :create, params: { image: @file }, format: :json
+      post :create, params: { image: fixture_file_upload("#{Rails.root}/spec/resources/min.jpg", 'image/jpg') }, format: :json
       expect(response).to have_http_status(:success)
     end
 
@@ -43,7 +54,7 @@ describe Api::V1::ImagesController, type: :controller do
       request.headers.merge! headers
 
       post :create, params: { image: @second_file }, format: :json
-      database_image = @user.images.find_by_id(JSON.parse(response.body)["image_url"].split('/').last)
+      database_image = @user.images.find_by_id(JSON.parse(response.body)["image"]["id"])
       expect(database_image).to be_present
     end
 
@@ -52,7 +63,7 @@ describe Api::V1::ImagesController, type: :controller do
       request.headers.merge! headers
 
       post :create, params: { image: @second_file }, format: :json
-      get :show, params: {id: JSON.parse(response.body)["image_url"].split('/').last}
+      get :show, params: {id: JSON.parse(response.body)["image"]["id"]}
       expect(response).to have_http_status(:success)
     end
 
@@ -147,7 +158,7 @@ describe Api::V1::ImagesController, type: :controller do
       request.headers.merge! headers
 
       post :resize, params: {image: {id: @user_image.id.to_s, width: 100, height: 100}}
-      expect(JSON.parse(response.body)["image_url"]).to be_present
+      expect(JSON.parse(response.body)["image"]["url"]).to be_present
     end
 
     it "creates resized image in database" do
@@ -155,7 +166,7 @@ describe Api::V1::ImagesController, type: :controller do
       request.headers.merge! headers
 
       post :resize, params: {image: {id: @user_image.id.to_s, width: 100, height: 100}}
-      resized_image = @user.images.find_by_id(JSON.parse(response.body)["image_url"].split('/').last)
+      resized_image = @user.images.find_by_id(JSON.parse(response.body)["image"]["id"])
       expect(resized_image).to be_present
     end
 
